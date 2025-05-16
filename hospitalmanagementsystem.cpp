@@ -44,6 +44,29 @@ int currentPatientID=1, currentDoctorID=1, currentAppointmentID=1, currentBillID
 // Function prototypes
 int login();
 void displayMainMenu();
+void managePatients();
+void manageDoctors();
+void manageAppointments();
+void manageBilling();
+void addNewPatient();
+void viewAllPatients();
+void updatePatient();
+void deletePatient();
+void addNewDoctor();
+void viewAllDoctors();
+void updateDoctor();
+void deleteDoctor();
+void addAppointment();
+void viewAllAppointments();
+void updateAppointment();
+void deleteAppointment();
+void addBill();
+void viewAllBills();
+void updateBill();
+void deleteBill();
+int validateDate(const char *date);
+int validateTime(const char *time);
+int isNumber(const char *str);
 void saveData();
 void loadData();
 
@@ -62,7 +85,10 @@ int main() {
         scanf("%d", &choice);
         
         switch(choice) {
-            case 1: case 2: case 3: case 4: // Handled by Adil and Hoor
+            case 1: managePatients(); break;
+            case 2: manageDoctors(); break;
+            case 3: manageAppointments(); break;
+            case 4: manageBilling(); break;
             case 5: saveData(); break;
             case 6: printf("Exiting...\n"); break;
             default: printf("Invalid choice! Try again.\n");
@@ -84,7 +110,7 @@ int login() {
         printf("Password: ");
         scanf("%19s", password);
         
-        if(strcmp(username, "HBAhospital") == 0 && 
+        if(strcmp(username, "NBAhospital") == 0 && 
            strcmp(password, "123") == 0) {
             return 1;
         }
@@ -104,120 +130,121 @@ void displayMainMenu() {
     printf("=================\n");
 }
 
-// File Handling
-void saveData() {
-    FILE *pFile = fopen("patients.dat", "w");
-    FILE *dFile = fopen("doctors.dat", "w");
-    FILE *aFile = fopen("appointments.dat", "w");
-    FILE *bFile = fopen("bills.dat", "w");
-    
-    // Save patients
-    for(int i = 0; i < patientCount; i++) {
-        fprintf(pFile, "%d,%s,%d,%s\n",
-                patientList[i].id,
-                patientList[i].name,
-                patientList[i].age,
-                patientList[i].problem);
-    }
-    
-    // Save doctors
-    for(int i = 0; i < doctorCount; i++) {
-        fprintf(dFile, "%d,%s,%s\n",
-                doctorList[i].id,
-                doctorList[i].name,
-                doctorList[i].specialization);
-    }
-    
-    // Save appointments
-    for(int i = 0; i < appointmentCount; i++) {
-        fprintf(aFile, "%d,%d,%d,%s,%s\n",
-                appointmentList[i].id,
-                appointmentList[i].patientId,
-                appointmentList[i].doctorId,
-                appointmentList[i].date,
-                appointmentList[i].time);
-    }
-    
-    // Save bills
-    for(int i = 0; i < billCount; i++) {
-        fprintf(bFile, "%d,%d,%.2f,%s,%d\n",
-                billList[i].id,
-                billList[i].patientId,
-                billList[i].amount,
-                billList[i].date,
-                billList[i].isPaid);
-    }
-    
-    fclose(pFile);
-    fclose(dFile);
-    fclose(aFile);
-    fclose(bFile);
-    printf("Data saved successfully!\n");
+// Patient Management
+void managePatients() {
+    int choice;
+    do {
+        printf("\n--- PATIENT MANAGEMENT ---\n");
+        printf("1. Add New Patient\n");
+        printf("2. View All Patients\n");
+        printf("3. Update Patient\n");
+        printf("4. Delete Patient\n");
+        printf("5. Back to Main Menu\n");
+        printf("Enter choice: ");
+        scanf("%d", &choice);
+        
+        switch(choice) {
+            case 1: addNewPatient(); break;
+            case 2: viewAllPatients(); break;
+            case 3: updatePatient(); break;
+            case 4: deletePatient(); break;
+            case 5: break;
+            default: printf("Invalid choice!\n");
+        }
+    } while(choice != 5);
 }
 
-void loadData() {
-    // Load patients
-    FILE *pFile = fopen("patients.dat", "r");
-    if(pFile) {
-        while(fscanf(pFile, "%d,%49[^,],%d,%99[^\n]\n",
-                    &patientList[patientCount].id,
-                    patientList[patientCount].name,
-                    &patientList[patientCount].age,
-                    patientList[patientCount].problem) == 4) {
-            if(patientList[patientCount].id >= currentPatientID) {
-                currentPatientID = patientList[patientCount].id + 1;
-            }
-            patientCount++;
-        }
-        fclose(pFile);
+void addNewPatient() {
+    if(patientCount >= 100) {
+        printf("Patient database full!\n");
+        return;
     }
     
-    // Load doctors
-    FILE *dFile = fopen("doctors.dat", "r");
-    if(dFile) {
-        while(fscanf(dFile, "%d,%49[^,],%49[^\n]\n",
-                    &doctorList[doctorCount].id,
-                    doctorList[doctorCount].name,
-                    doctorList[doctorCount].specialization) == 3) {
-            if(doctorList[doctorCount].id >= currentDoctorID) {
-                currentDoctorID = doctorList[doctorCount].id + 1;
-            }
-            doctorCount++;
-        }
-        fclose(dFile);
+    Patient p;
+    p.id = currentPatientID++;
+    
+    printf("\nEnter patient details:\n");
+    printf("Name: ");
+    scanf(" %49[^\n]", p.name);
+    
+    printf("Age: ");
+    while(scanf("%d", &p.age) != 1 || p.age < 0) {
+        printf("Invalid age! Enter positive number: ");
+        while(getchar() != '\n');
     }
     
-    // Load appointments
-    FILE *aFile = fopen("appointments.dat", "r");
-    if(aFile) {
-        while(fscanf(aFile, "%d,%d,%d,%10[^,],%5[^\n]\n",
-                    &appointmentList[appointmentCount].id,
-                    &appointmentList[appointmentCount].patientId,
-                    &appointmentList[appointmentCount].doctorId,
-                    appointmentList[appointmentCount].date,
-                    appointmentList[appointmentCount].time) == 5) {
-            if(appointmentList[appointmentCount].id >= currentAppointmentID) {
-                currentAppointmentID = appointmentList[appointmentCount].id + 1;
-            }
-            appointmentCount++;
-        }
-        fclose(aFile);
-    }
+    printf("Medical Problem: ");
+    scanf(" %99[^\n]", p.problem);
     
-    // Load bills
-    FILE *bFile = fopen("bills.dat", "r");
-    if(bFile) {
-        while(fscanf(bFile, "%d,%d,%f,%10[^,],%d\n",
-                    &billList[billCount].id,
-                    &billList[billCount].patientId,
-                    &billList[billCount].amount,
-                    billList[billCount].date,
-                    &billList[billCount].isPaid) == 5) {
-            if(billList[billCount].id >= currentBillID) {
-                currentBillID = billList[billCount].id + 1;
-            }
-            billCount++;
-        }
-        fclose(bFile);
+    patientList[patientCount++] = p;
+    printf("Patient added! ID: %d\n", p.id);
+}
+
+void viewAllPatients() {
+    printf("\n=== PATIENT LIST (%d) ===\n", patientCount);
+    for(int i = 0; i < patientCount; i++) {
+        printf("ID: %d | Name: %s | Age: %d | Problem: %s\n",
+               patientList[i].id,
+               patientList[i].name,
+               patientList[i].age,
+               patientList[i].problem);
     }
 }
+
+void updatePatient() {
+    int searchID;
+    printf("Enter Patient ID to update: ");
+    scanf("%d", &searchID);
+    
+    for(int i = 0; i < patientCount; i++) {
+        if(patientList[i].id == searchID) {
+            printf("Enter new name: ");
+            scanf(" %49[^\n]", patientList[i].name);
+            
+            printf("Enter new age: ");
+            while(scanf("%d", &patientList[i].age) != 1 || patientList[i].age < 0) {
+                printf("Invalid age! Enter positive number: ");
+                while(getchar() != '\n');
+            }
+            
+            printf("Enter new problem: ");
+            scanf(" %99[^\n]", patientList[i].problem);
+            
+            printf("Patient updated!\n");
+            return;
+        }
+    }
+    printf("Patient ID %d not found!\n", searchID);
+}
+
+void deletePatient() {
+    int searchID;
+    printf("Enter Patient ID to delete: ");
+    scanf("%d", &searchID);
+    
+    for(int i = 0; i < patientCount; i++) {
+        if(patientList[i].id == searchID) {
+            // Delete related appointments and bills
+            for(int j = 0; j < appointmentCount; j++) {
+                if(appointmentList[j].patientId == searchID) {
+                    for(int k = j; k < appointmentCount-1; k++) {
+                        appointmentList[k] = appointmentList[k+1];
+                    }
+                    appointmentCount--;
+                    j--;
+                }
+            }
+            
+            for(int j = 0; j < billCount; j++) {
+                if(billList[j].patientId == searchID) {
+                    for(int k = j; k < billCount-1; k++) {
+                        billList[k] = billList[k+1];
+                    }
+                    billCount--;
+                    j--;
+                }
+            }
+            
+            // Delete patient
+            for(int j = i; j < patientCount-1; j++) {
+                patientList[j] = patientList[j+1];}
