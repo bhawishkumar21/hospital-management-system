@@ -501,22 +501,271 @@ void deleteAppointment() {
     }
     printf("Appointment ID %d not found!\n", searchID);
 }
-// CONTINUE W/ Module 3: Billing management
 
+void manageBilling() {
+    int choice;
+    do {
+        printf("\n--- BILLING MANAGEMENT ---\n");
+        printf("1. Add New Bill\n");
+        printf("2. View All Bills\n");
+        printf("3. Update Bill\n");
+        printf("4. Delete Bill\n");
+        printf("5. Back to Main Menu\n");
+        printf("Enter choice: ");
+        scanf("%d", &choice);
+        
+        switch(choice) {
+            case 1: addBill(); break;
+            case 2: viewAllBills(); break;
+            case 3: updateBill(); break;
+            case 4: deleteBill(); break;
+            case 5: break;
+            default: printf("Invalid choice!\n");
+        }
+    } while(choice != 5);
+}
+
+void addBill() {
+    if(billCount >= 100) {
+        printf("Billing database full!\n");
+        return;
+    }
+    
+    Bill b;
+    b.id = currentBillID++;
+    
+    printf("\nEnter bill details:\n");
+    printf("Patient ID: ");
+    scanf("%d", &b.patientId);
+    
+    int validPatient = 0;
+    for(int i = 0; i < patientCount; i++) {
+        if(patientList[i].id == b.patientId) validPatient = 1;
+    }
+    if(!validPatient) {
+        printf("Invalid Patient ID!\n");
+        return;
+    }
+    
+    printf("Amount: ");
+    while(scanf("%f", &b.amount) != 1 || b.amount < 0) {
+        printf("Invalid amount! Enter positive number: ");
+        while(getchar() != '\n');
+    }
+    
+    do {
+        printf("Date (DD-MM-YYYY): ");
+        scanf(" %10s", b.date);
+    } while(!validateDate(b.date));
+    
+    printf("Paid? (1=Yes/0=No): ");
+    scanf("%d", &b.isPaid);
+    
+    billList[billCount++] = b;
+    printf("Bill added! ID: %d\n", b.id);
+}
+
+void viewAllBills() {
+    printf("\n=== BILL LIST (%d) ===\n", billCount);
+    for(int i = 0; i < billCount; i++) {
+        printf("ID: %d | Patient: %d | Amount: $%.2f | Date: %s | Status: %s\n",
+               billList[i].id,
+               billList[i].patientId,
+               billList[i].amount,
+               billList[i].date,
+               billList[i].isPaid ? "Paid" : "Unpaid");
+    }
+}
+
+void updateBill() {
+    int searchID;
+    printf("Enter Bill ID to update: ");
+    scanf("%d", &searchID);
+    
+    for(int i = 0; i < billCount; i++) {
+        if(billList[i].id == searchID) {
+            printf("New Patient ID: ");
+            scanf("%d", &billList[i].patientId);
+            
+            int validPatient = 0;
+            for(int j = 0; j < patientCount; j++) {
+                if(patientList[j].id == billList[i].patientId) validPatient = 1;
+            }
+            if(!validPatient) {
+                printf("Invalid Patient ID! Update failed.\n");
+                return;
+            }
+            
+            printf("New Amount: ");
+            while(scanf("%f", &billList[i].amount) != 1 || billList[i].amount < 0) {
+                printf("Invalid amount! Enter positive number: ");
+                while(getchar() != '\n');
+            }
+            
+            do {
+                printf("New Date (DD-MM-YYYY): ");
+                scanf(" %10s", billList[i].date);
+            } while(!validateDate(billList[i].date));
+            
+            printf("New Payment Status (1=Paid/0=Unpaid): ");
+            scanf("%d", &billList[i].isPaid);
+            
+            printf("Bill updated!\n");
+            return;
+        }
+    }
+    printf("Bill ID %d not found!\n", searchID);
+}
+
+void deleteBill() {
+    int searchID;
+    printf("Enter Bill ID to delete: ");
+    scanf("%d", &searchID);
+    
+    for(int i = 0; i < billCount; i++) {
+        if(billList[i].id == searchID) {
+            for(int j = i; j < billCount-1; j++) {
+                billList[j] = billList[j+1];
+            }
+            billCount--;
+            printf("Bill deleted!\n");
+            return;
+        }
+    }
+    printf("Bill ID %d not found!\n", searchID);
+}
+
+// Validation functions
+int validateDate(const char *date) {
+    if(strlen(date) != 10 || date[2] != '-' || date[5] != '-') {
+        printf("Invalid date format! Use DD-MM-YYYY\n");
+        return 0;
+    }
+    return 1;
+}
+
+int validateTime(const char *time) {
+    if(strlen(time) != 5 || time[2] != ':') {
+        printf("Invalid time format! Use HH:MM\n");
+        return 0;
+    }
+    return 1;
+}
 
 // File Handling
+void saveData() {
+    FILE *pFile = fopen("patients.dat", "w");
+    FILE *dFile = fopen("doctors.dat", "w");
+    FILE *aFile = fopen("appointments.dat", "w");
+    FILE *bFile = fopen("bills.dat", "w");
+    
+    // Save patients
+    for(int i = 0; i < patientCount; i++) {
+        fprintf(pFile, "%d,%s,%d,%s\n",
+                patientList[i].id,
+                patientList[i].name,
+                patientList[i].age,
+                patientList[i].problem);
+    }
+    
+    // Save doctors
+    for(int i = 0; i < doctorCount; i++) {
+        fprintf(dFile, "%d,%s,%s\n",
+                doctorList[i].id,
+                doctorList[i].name,
+                doctorList[i].specialization);
+    }
+    
+    // Save appointments
+    for(int i = 0; i < appointmentCount; i++) {
+        fprintf(aFile, "%d,%d,%d,%s,%s\n",
+                appointmentList[i].id,
+                appointmentList[i].patientId,
+                appointmentList[i].doctorId,
+                appointmentList[i].date,
+                appointmentList[i].time);
+    }
+    
+    // Save bills
+    for(int i = 0; i < billCount; i++) {
+        fprintf(bFile, "%d,%d,%.2f,%s,%d\n",
+                billList[i].id,
+                billList[i].patientId,
+                billList[i].amount,
+                billList[i].date,
+                billList[i].isPaid);
+    }
+    
+    fclose(pFile);
+    fclose(dFile);
+    fclose(aFile);
+    fclose(bFile);
+    printf("Data saved successfully!\n");
+}
 
-
-// Saving Ustomer data
-
-
-// Saving Doctor Data
-
-
-// Save Apointments
-
-
-// & Bills
-
-
-// Fetch all module data (Load all 4 Module Data)
+void loadData() {
+    // Load patients
+    FILE *pFile = fopen("patients.dat", "r");
+    if(pFile) {
+        while(fscanf(pFile, "%d,%49[^,],%d,%99[^\n]\n",
+                    &patientList[patientCount].id,
+                    patientList[patientCount].name,
+                    &patientList[patientCount].age,
+                    patientList[patientCount].problem) == 4) {
+            if(patientList[patientCount].id >= currentPatientID) {
+                currentPatientID = patientList[patientCount].id + 1;
+            }
+            patientCount++;
+        }
+        fclose(pFile);
+    }
+    
+    // Load doctors
+    FILE *dFile = fopen("doctors.dat", "r");
+    if(dFile) {
+        while(fscanf(dFile, "%d,%49[^,],%49[^\n]\n",
+                    &doctorList[doctorCount].id,
+                    doctorList[doctorCount].name,
+                    doctorList[doctorCount].specialization) == 3) {
+            if(doctorList[doctorCount].id >= currentDoctorID) {
+                currentDoctorID = doctorList[doctorCount].id + 1;
+            }
+            doctorCount++;
+        }
+        fclose(dFile);
+    }
+    
+    // Load appointments
+    FILE *aFile = fopen("appointments.dat", "r");
+    if(aFile) {
+        while(fscanf(aFile, "%d,%d,%d,%10[^,],%5[^\n]\n",
+                    &appointmentList[appointmentCount].id,
+                    &appointmentList[appointmentCount].patientId,
+                    &appointmentList[appointmentCount].doctorId,
+                    appointmentList[appointmentCount].date,
+                    appointmentList[appointmentCount].time) == 5) {
+            if(appointmentList[appointmentCount].id >= currentAppointmentID) {
+                currentAppointmentID = appointmentList[appointmentCount].id + 1;
+            }
+            appointmentCount++;
+        }
+        fclose(aFile);
+    }
+    
+    // Load bills
+    FILE *bFile = fopen("bills.dat", "r");
+    if(bFile) {
+        while(fscanf(bFile, "%d,%d,%f,%10[^,],%d\n",
+                    &billList[billCount].id,
+                    &billList[billCount].patientId,
+                    &billList[billCount].amount,
+                    billList[billCount].date,
+                    &billList[billCount].isPaid) == 5) {
+            if(billList[billCount].id >= currentBillID) {
+                currentBillID = billList[billCount].id + 1;
+            }
+            billCount++;
+        }
+        fclose(bFile);
+    }
+}
