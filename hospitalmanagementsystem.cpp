@@ -108,21 +108,24 @@ int login() {
     char username[20], password[20];
     
     while(attempts > 0) {
-        printf("\n=== HOSPITAL LOGIN ===\n");
+        printf("\n========================================\n");
+        printf("          === HOSPITAL LOGIN ===         \n");
+        printf("========================================\n");
         printf("Username: ");
         scanf("%19s", username);
-        printf("Password: ");
+        printf("Password: "); 
         scanf("%19s", password);
+        printf("========================================\n");
         
-        if(strcmp(username, "NBAhospital") == 0 && 
+        if(strcmp(username, "HBAhospital") == 0 && 
            strcmp(password, "123") == 0) {
             return 1;
         }
         printf("Invalid credentials! Attempts left: %d\n", --attempts);
+        printf("========================================\n");
     }
     return 0;
 }
-
 void displayMainMenu() {
     printf("\n=== MAIN MENU ===\n");
     printf("1. Patient Management\n");
